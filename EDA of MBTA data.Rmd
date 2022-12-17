@@ -1,0 +1,292 @@
+---
+title: "EDA of MBTA data"
+author: "Tianjian Xie"
+date: "2022-12-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(dplyr)
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(forcats)
+library(fmsb)
+```
+
+## Input Data
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+# agency <- read.delim("agency.txt", header = TRUE)
+# calendar <- read.delim("calendar.txt", header = TRUE)
+# calendar_attributes <- read.delim("calendar_attributes.txt", header = TRUE)
+# calendar_dates <- read.delim("calendar_dates.txt", header = TRUE)
+# checkpoints <- read.delim("checkpoints.txt", header = TRUE)
+# directions <- read.delim("directions.txt", header = TRUE)
+# facilities <- read.delim("facilities.txt", header = TRUE)
+# facilities_properties <- read.delim("facilities_properties.txt", header = TRUE)
+# facilities_properties_definitions <- read.delim("facilities_properties_definitions.txt", header = TRUE)
+# feed_info <- read.delim("feed_info.txt", header = TRUE)
+# levels <- read.delim("levels.txt", header = TRUE)
+# lines <- read.delim("lines.txt", header = TRUE)
+# linked_datasets <- read.delim("linked_datasets.txt", header = TRUE)
+# multi_route_trips <- read.delim("multi_route_trips.txt", header = TRUE)
+# pathways <- read.delim("pathways.txt", header = TRUE)
+# route_patterns <- read.delim("route_patterns.txt", header = TRUE)
+# routes <- read.delim("routes.txt", header = TRUE)
+# shapes <- read.delim("shapes.txt", header = TRUE)
+# stop_times <- read.delim("stop_times.txt", header = TRUE)
+# stops <- read.delim("stops.txt", header = TRUE)
+# transfers <- read.delim("transfers.txt", header = TRUE)
+# trips <- read.delim("trips.txt", header = TRUE)
+# trips_properties <- read.delim("trips_properties.txt", header = TRUE)
+# trips_properties_definitions <- read.delim("trips_properties_definitions.txt", header = TRUE)
+Q4_2021LRTimes <- read.csv("LRTravelTimesQ4_21.csv", header = T)
+Q4_2021HRTimes <- read.csv("HRTravelTimesQ4_21.csv", header = T)
+Q1_2022LRTimes <- read.csv("2022-Q1_LRTravelTimes.csv", header = T)
+Q2_2022LRTimes <- read.csv("2022-Q2_LRTravelTimes.csv", header = T)
+Q3_2022LRTimes <- read.csv("2022-Q3_LRTravelTimes.csv", header = T)
+Q1_2022HRTimes <- read.csv("2022-Q1_HRTravelTimes.csv", header = T)
+Q2_2022HRTimes <- read.csv("2022-Q2_HRTravelTimes.csv", header = T)
+Q3_2022HRTimes <- read.csv("2022-Q3_HRTravelTimes.csv", header = T)
+Bus_21_10 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-10.csv", header = T)
+Bus_21_11 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-11.csv", header = T)
+Bus_21_12 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-12.csv", header = T)
+Bus_22_01 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-01.csv", header = T)
+Bus_22_02 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-02.csv", header = T)
+Bus_22_03 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-03.csv", header = T)
+Bus_22_04 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-04.csv", header = T)
+Bus_22_05 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-05.csv", header = T)
+Bus_22_06 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-06.csv", header = T)
+Bus_22_07 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-07.csv", header = T)
+Bus_22_08 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-08.csv", header = T)
+Bus_22_09 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-09.csv", header = T)
+```
+
+## Data Cleaning
+Select one week from each month
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+Q4_2021_date <- c("2021-10-11","2021-10-12","2021-10-13","2021-10-14","2021-10-15","2021-10-16","2021-10-17",
+                  "2021-11-22","2021-11-23","2021-11-24","2021-11-25","2021-11-26","2021-11-27","2021-11-28",
+                  "2021-12-13","2021-12-14","2021-12-15","2021-12-16","2021-12-17","2021-12-18","2021-12-19")
+
+Q4_2021LRTimes_Selected <- Q4_2021LRTimes %>% filter(service_date %in% Q4_2021_date)
+Q4_2021HRTimes_Selected <- Q4_2021HRTimes %>% filter(service_date %in% Q4_2021_date)
+
+Q1_2022_date <- c("2022-01-03","2022-01-04","2022-01-05","2022-01-06","2022-01-07","2022-01-08","2022-01-09",
+                  "2022-02-21","2022-02-22","2022-02-23","2022-02-24","2022-02-25","2022-02-26","2022-02-27",
+                  "2022-03-21","2022-03-22","2022-03-23","2022-03-24","2022-03-25","2022-03-26","2022-03-27")
+
+Q1_2022LRTimes_Selected <- Q1_2022LRTimes %>% filter(service_date %in% Q1_2022_date)
+Q1_2022HRTimes_Selected <- Q1_2022HRTimes %>% filter(service_date %in% Q1_2022_date)
+
+Q2_2022_date <- c("2022-04-18","2022-04-19","2022-04-20","2022-04-21","2022-04-22","2022-04-23","2022-04-24",
+                  "2022-05-09","2022-05-10","2022-05-11","2022-05-12","2022-05-13","2022-05-14","2022-05-15",
+                  "2022-06-06","2022-06-07","2022-06-08","2022-06-09","2022-06-10","2022-06-11","2022-06-12")
+
+Q2_2022LRTimes_Selected <- Q2_2022LRTimes %>% filter(service_date %in% Q2_2022_date)
+Q2_2022HRTimes_Selected <- Q2_2022HRTimes %>% filter(service_date %in% Q2_2022_date)
+
+Q3_2022_date <- c("2022-07-11","2022-07-12","2022-07-13","2022-07-14","2022-07-15","2022-07-16","2022-07-17",
+                  "2022-08-08","2022-08-09","2022-08-10","2022-08-11","2022-08-12","2022-08-13","2022-08-14",
+                  "2022-09-19","2022-09-20","2022-09-21","2022-09-22","2022-09-23","2022-09-24","2022-09-25")
+
+Q3_2022LRTimes_Selected <- Q3_2022LRTimes %>% filter(service_date %in% Q3_2022_date)
+Q3_2022HRTimes_Selected <- Q3_2022HRTimes %>% filter(service_date %in% Q3_2022_date)
+
+LRTimes_Selected <- rbind(Q4_2021LRTimes_Selected, Q1_2022LRTimes_Selected, Q2_2022LRTimes_Selected, Q3_2022LRTimes_Selected)
+HRTimes_Selected <- rbind(Q4_2021HRTimes_Selected, Q1_2022HRTimes_Selected, Q2_2022HRTimes_Selected, Q3_2022HRTimes_Selected)
+RTimes_Selected <- rbind(LRTimes_Selected, HRTimes_Selected)
+rm(Q1_2022HRTimes,Q1_2022LRTimes,Q1_2022HRTimes_Selected,Q1_2022LRTimes_Selected,
+   Q2_2022HRTimes,Q2_2022LRTimes,Q2_2022HRTimes_Selected,Q2_2022LRTimes_Selected,
+   Q3_2022HRTimes,Q3_2022LRTimes,Q3_2022HRTimes_Selected,Q3_2022LRTimes_Selected,
+   Q4_2021HRTimes,Q4_2021LRTimes,Q4_2021HRTimes_Selected,Q4_2021LRTimes_Selected)
+
+Bus_date <- c("2021-10-11","2021-10-12","2021-10-13","2021-10-14","2021-10-15","2021-10-16","2021-10-17",
+              "2021-11-22","2021-11-23","2021-11-24","2021-11-25","2021-11-26","2021-11-27","2021-11-28",
+              "2021-12-13","2021-12-14","2021-12-15","2021-12-16","2021-12-17","2021-12-18","2021-12-19",
+              "2022-01-03","2022-01-04","2022-01-05","2022-01-06","2022-01-07","2022-01-08","2022-01-09",
+              "2022-02-21","2022-02-22","2022-02-23","2022-02-24","2022-02-25","2022-02-26","2022-02-27",
+              "2022-03-21","2022-03-22","2022-03-23","2022-03-24","2022-03-25","2022-03-26","2022-03-27",
+              "2022-04-18","2022-04-19","2022-04-20","2022-04-21","2022-04-22","2022-04-23","2022-04-24",
+              "2022-05-09","2022-05-10","2022-05-11","2022-05-12","2022-05-13","2022-05-14","2022-05-15",
+              "2022-06-06","2022-06-07","2022-06-08","2022-06-09","2022-06-10","2022-06-11","2022-06-12",
+              "2022-07-11","2022-07-12","2022-07-13","2022-07-14","2022-07-15","2022-07-16","2022-07-17",
+              "2022-08-08","2022-08-09","2022-08-10","2022-08-11","2022-08-12","2022-08-13","2022-08-14",
+              "2022-09-19","2022-09-20","2022-09-21","2022-09-22","2022-09-23","2022-09-24","2022-09-25")
+Bus_data <- rbind(Bus_21_10,Bus_21_11,Bus_21_12,Bus_22_01,Bus_22_02,Bus_22_03,Bus_22_04,Bus_22_05,Bus_22_06,
+                  Bus_22_07,Bus_22_08,Bus_22_09)
+rm(Bus_21_10,Bus_21_11,Bus_21_12,Bus_22_01,Bus_22_02,Bus_22_03,Bus_22_04,Bus_22_05,Bus_22_06,
+                  Bus_22_07,Bus_22_08,Bus_22_09)
+Bus_Selected <- Bus_data %>% filter(service_date %in% Bus_date)
+rm(Bus_date,Bus_data)
+Bus_Selected <- Bus_Selected %>% filter(scheduled != "")
+Bus_Selected <- Bus_Selected %>% filter(actual != "")
+```
+
+## EDA
+
+Now have some data visualization based on the selected data.
+
+Travel time between two stops of different routes in seconds
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 1: Travel time between two stops of LR routes in seconds',fig.align='center'}
+plot1 <- LRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fill=route_id)) +
+    geom_histogram(alpha=0.6, binwidth = 5) +
+    scale_fill_viridis(discrete=TRUE) +
+    scale_color_viridis(discrete=TRUE) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      panel.spacing = unit(0.1, "lines"),
+      strip.text.x = element_text(size = 8)
+    ) +
+    xlab("") +
+    ylab("Travel Time(in sec)") +
+    facet_wrap(~route_id)
+plot1
+```
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 2: Travel time between two stops of HR routes in seconds',fig.align='center'}
+plot2 <- HRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fill=route_id)) +
+    geom_histogram(alpha=0.6, binwidth = 5) +
+    scale_fill_viridis(discrete=TRUE) +
+    scale_color_viridis(discrete=TRUE) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      panel.spacing = unit(0.1, "lines"),
+      strip.text.x = element_text(size = 8)
+    ) +
+    xlab("") +
+    ylab("Travel Time(in sec)") +
+    facet_wrap(~route_id)
+plot2
+```
+
+Amount of different routes
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 3: Amount of different routes ranked',fig.align='center'}
+n_Green_B  <- length(which(RTimes_Selected$route_id == "Green-B"))
+n_Green_C  <- length(which(RTimes_Selected$route_id == "Green-C"))
+n_Green_D  <- length(which(RTimes_Selected$route_id == "Green-D"))
+n_Green_E  <- length(which(RTimes_Selected$route_id == "Green-E"))
+n_Mattapan <- length(which(RTimes_Selected$route_id == "Mattapan"))
+n_Orange   <- length(which(RTimes_Selected$route_id == "Orange"))
+n_Blue     <- length(which(RTimes_Selected$route_id == "Blue"))
+n_Red      <- length(which(RTimes_Selected$route_id == "Red"))
+route_number_df <- data.frame(name=c("Green-B","Green-C","Green-D","Green-E","Mattapan","Orange","Blue","Red"),
+                              val=c(n_Green_B,n_Green_C,n_Green_D,n_Green_E,n_Mattapan,n_Orange,n_Blue,n_Red))
+plot3 <- route_number_df %>% arrange(val) %>%   
+         mutate(name=factor(name, levels=name)) %>%  
+         ggplot( aes(x=name, y=val)) +
+         geom_segment( aes(xend=name, yend=0)) +
+         geom_point( size=4, color="orange") +
+         coord_flip() +
+         theme_bw() +
+         xlab("Routes") +
+         ylab("Amount")
+plot3
+rm(n_Green_B,n_Green_C,n_Green_D,n_Green_E,n_Mattapan,n_Orange,n_Blue,n_Red,route_number_df)
+```
+
+Different train to the stop 70107
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 4: Average spending time from different stations to 70107',fig.align='center'}
+R_70107_df <- RTimes_Selected[RTimes_Selected$to_stop_id == "70107", c("route_id","from_stop_id","travel_time_sec")] %>%
+              group_by(from_stop_id) %>%
+              summarize(mean_time=mean(travel_time_sec))
+R_70107_df$from_stop_id <- as.character(R_70107_df$from_stop_id)
+plot4 <- R_70107_df %>% arrange(mean_time) %>%
+         mutate(from_stop_id=factor(from_stop_id, levels=from_stop_id)) %>%
+         ggplot(aes(x=from_stop_id, y=mean_time)) +
+         geom_segment( aes(x=from_stop_id, xend=from_stop_id, y=0, yend=mean_time), color="blue") +
+         geom_point( color="blue", size=4, alpha=0.6) +
+         theme_light() +
+         coord_flip() +
+         xlab("Mean Travel Time") + 
+         ylab("From Which Stop") + 
+         theme()
+plot4
+rm(R_70107_df)
+```
+
+Route date and time spent between stop 70117 and 70107
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 5: Average spending time between stop 70117 and 70107 on different date',fig.align='center'}
+R_70117_70107_df <- RTimes_Selected[RTimes_Selected$from_stop_id == "70117" & RTimes_Selected$to_stop_id == "70107",
+                                    c("service_date","travel_time_sec")] %>%
+                    group_by(service_date) %>%
+                    summarize(mean_time=mean(travel_time_sec))
+R_70117_70107_df$year_month <- substr(R_70117_70107_df$service_date,1,7)
+R_70117_70107_df$service_date <- substr(R_70117_70107_df$service_date,9,10)
+plot5 <- R_70117_70107_df %>%
+         ggplot( aes(x=service_date, y=mean_time, group=year_month, color=year_month)) +
+         geom_line() +
+         scale_color_viridis(discrete = TRUE) +
+         xlab("Date") + 
+         ylab("Average spending time") + 
+         theme_ipsum()
+plot5
+rm(R_70117_70107_df)
+```
+
+Delay of Route 57 at different date
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=10, fig.dim='Figure 6: Average delay time between different stops of route 57 at different date',fig.align='center'}
+Bus_Selected_57 <- Bus_Selected[Bus_Selected$route_id == "57",
+                                c("service_date","stop_id","actual","scheduled")]
+Bus_Selected_57$delay_sec <- (as.numeric(substr(Bus_Selected_57$actual,12,13)) -
+                              as.numeric(substr(Bus_Selected_57$scheduled,12,13))) * 3600 +
+                             (as.numeric(substr(Bus_Selected_57$actual,15,16)) -
+                              as.numeric(substr(Bus_Selected_57$scheduled,15,16))) * 60 +
+                             (as.numeric(substr(Bus_Selected_57$actual,18,19)) -
+                              as.numeric(substr(Bus_Selected_57$scheduled,18,19)))
+Bus_57_df <- Bus_Selected_57 %>% group_by(stop_id,service_date) %>%
+             summarize(mean_delay=mean(delay_sec))
+rm(Bus_Selected_57)
+plot6 <- Bus_57_df %>% 
+         ggplot( aes(y=service_date, x=mean_delay, fill=stop_id)) + 
+         geom_bar(position="stack", stat="identity") + 
+         ylab("Date") +
+         xlab("Delay Time(in sec)") +
+         theme_ipsum()
+plot6
+rm(Bus_57_df)
+```
+
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 7: Start time, time enter the midpoint stop, and end time of route 57',fig.align='center'}
+Bus_Selected_57_Start <- Bus_Selected[Bus_Selected$route_id == "57"&
+                                      Bus_Selected$point_type == "Startpoint",
+                                      c("service_date","point_type","actual")]
+
+Bus_Selected_57_Start$Time <- as.numeric(substr(Bus_Selected_57_Start$actual,12,13))
+
+Bus_Selected_57_Mid   <- Bus_Selected[Bus_Selected$route_id == "57"&
+                                      Bus_Selected$point_type == "Midpoint",
+                                      c("service_date","point_type","actual")]
+
+Bus_Selected_57_Mid$Time   <- as.numeric(substr(Bus_Selected_57_Mid$actual,12,13))
+
+Bus_Selected_57_End   <- Bus_Selected[Bus_Selected$route_id == "57"&
+                                      Bus_Selected$point_type == "Endpoint",
+                                      c("service_date","point_type","actual")]
+
+Bus_Selected_57_End$Time   <- as.numeric(substr(Bus_Selected_57_End$actual,12,13))
+
+plot7 <- Bus_Selected_57_Start %>%
+         ggplot(aex(x=Time)) + 
+         geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) + 
+         xlab("Time") + 
+         ylab("Density")
+
+plot8 <- Bus_Selected_57_Mid %>%
+         ggplot(aex(x=Time)) + 
+         geom_density(fill="#D308F7", color="#CF86DC", alpha=0.8) + 
+         xlab("Time") + 
+         ylab("Density")
+
+plot9 <- Bus_Selected_57_End %>%
+         ggplot(aex(x=Time)) + 
+         geom_density(fill="#7FF502", color="#96B279", alpha=0.8) + 
+         xlab("Time") + 
+         ylab("Density")
+grid.arrange(plot7, plot8, plot9, ncol = 3)
+```
+
