@@ -13,6 +13,8 @@ library(hrbrthemes)
 library(viridis)
 library(forcats)
 library(fmsb)
+library(ggplot2)
+library(gridExtra)
 ```
 
 ## Input Data
@@ -129,7 +131,7 @@ Bus_Selected <- Bus_Selected %>% filter(actual != "")
 Now have some data visualization based on the selected data.
 
 Travel time between two stops of different routes in seconds
-```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 1: Travel time between two stops of LR routes in seconds',fig.align='center'}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 1: Travel time between two stops of LR routes in seconds',fig.align='center'}
 plot1 <- LRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fill=route_id)) +
     geom_histogram(alpha=0.6, binwidth = 5) +
     scale_fill_viridis(discrete=TRUE) +
@@ -146,7 +148,7 @@ plot1 <- LRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fil
 plot1
 ```
 
-```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 2: Travel time between two stops of HR routes in seconds',fig.align='center'}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 2: Travel time between two stops of HR routes in seconds',fig.align='center'}
 plot2 <- HRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fill=route_id)) +
     geom_histogram(alpha=0.6, binwidth = 5) +
     scale_fill_viridis(discrete=TRUE) +
@@ -164,7 +166,7 @@ plot2
 ```
 
 Amount of different routes
-```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 3: Amount of different routes ranked',fig.align='center'}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 3: Amount of different routes ranked',fig.align='center'}
 n_Green_B  <- length(which(RTimes_Selected$route_id == "Green-B"))
 n_Green_C  <- length(which(RTimes_Selected$route_id == "Green-C"))
 n_Green_D  <- length(which(RTimes_Selected$route_id == "Green-D"))
@@ -189,7 +191,7 @@ rm(n_Green_B,n_Green_C,n_Green_D,n_Green_E,n_Mattapan,n_Orange,n_Blue,n_Red,rout
 ```
 
 Different train to the stop 70107
-```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 4: Average spending time from different stations to 70107',fig.align='center'}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 4: Average spending time from different stations to 70107',fig.align='center'}
 R_70107_df <- RTimes_Selected[RTimes_Selected$to_stop_id == "70107", c("route_id","from_stop_id","travel_time_sec")] %>%
               group_by(from_stop_id) %>%
               summarize(mean_time=mean(travel_time_sec))
@@ -209,7 +211,7 @@ rm(R_70107_df)
 ```
 
 Route date and time spent between stop 70117 and 70107
-```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 5: Average spending time between stop 70117 and 70107 on different date',fig.align='center'}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 5: Average spending time between stop 70117 and 70107 on different date',fig.align='center'}
 R_70117_70107_df <- RTimes_Selected[RTimes_Selected$from_stop_id == "70117" & RTimes_Selected$to_stop_id == "70107",
                                     c("service_date","travel_time_sec")] %>%
                     group_by(service_date) %>%
@@ -228,7 +230,7 @@ rm(R_70117_70107_df)
 ```
 
 Delay of Route 57 at different date
-```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=10, fig.dim='Figure 6: Average delay time between different stops of route 57 at different date',fig.align='center'}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=10, fig.cap='Figure 6: Average delay time between different stops of route 57 at different date',fig.align='center'}
 Bus_Selected_57 <- Bus_Selected[Bus_Selected$route_id == "57",
                                 c("service_date","stop_id","actual","scheduled")]
 Bus_Selected_57$delay_sec <- (as.numeric(substr(Bus_Selected_57$actual,12,13)) -
@@ -251,7 +253,7 @@ rm(Bus_57_df)
 ```
 
 
-```{r echo = FALSE, warning = FALSE, message = FALSE, fig.dim='Figure 7: Start time, time enter the midpoint stop, and end time of route 57',fig.align='center'}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 7: Start time, time enter the midpoint stop, and end time of route 57',fig.align='center'}
 Bus_Selected_57_Start <- Bus_Selected[Bus_Selected$route_id == "57"&
                                       Bus_Selected$point_type == "Startpoint",
                                       c("service_date","point_type","actual")]
@@ -271,19 +273,19 @@ Bus_Selected_57_End   <- Bus_Selected[Bus_Selected$route_id == "57"&
 Bus_Selected_57_End$Time   <- as.numeric(substr(Bus_Selected_57_End$actual,12,13))
 
 plot7 <- Bus_Selected_57_Start %>%
-         ggplot(aex(x=Time)) + 
+         ggplot(aes(x=Time)) + 
          geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) + 
          xlab("Time") + 
          ylab("Density")
 
 plot8 <- Bus_Selected_57_Mid %>%
-         ggplot(aex(x=Time)) + 
+         ggplot(aes(x=Time)) + 
          geom_density(fill="#D308F7", color="#CF86DC", alpha=0.8) + 
          xlab("Time") + 
          ylab("Density")
 
 plot9 <- Bus_Selected_57_End %>%
-         ggplot(aex(x=Time)) + 
+         ggplot(aes(x=Time)) + 
          geom_density(fill="#7FF502", color="#96B279", alpha=0.8) + 
          xlab("Time") + 
          ylab("Density")
