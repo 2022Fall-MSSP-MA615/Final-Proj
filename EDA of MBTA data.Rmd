@@ -16,6 +16,13 @@ library(fmsb)
 library(ggplot2)
 library(gridExtra)
 ```
+## Abstract 
+
+Nowadays, Google map is a widely used app. People can use this app to check how to reach to their destinations and how long will it takes. Usually, the app will provides several transportation methods to the users to choose and give how long will each methods take. It's pretty convenient and becomes very popular in a short time. However, when we are using Google map, we can always meet some problems. The most common problem I met is the cost time the app provides me always inaccurate. It's too hard for individuals to fix the problem, but we can study the data and see if we can find if there is any ways we can change the code to make improvement. 
+
+## Introduction
+
+This project is aimed to build a shiny app that ask the users to select their preferred transportation and give them a virtual result that how long will the chosen route take based on the Boston map. To reach the goal, first, we need to check the data provided by MBTA. 
 
 ## Input Data
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
@@ -51,22 +58,11 @@ Q3_2022LRTimes <- read.csv("2022-Q3_LRTravelTimes.csv", header = T)
 Q1_2022HRTimes <- read.csv("2022-Q1_HRTravelTimes.csv", header = T)
 Q2_2022HRTimes <- read.csv("2022-Q2_HRTravelTimes.csv", header = T)
 Q3_2022HRTimes <- read.csv("2022-Q3_HRTravelTimes.csv", header = T)
-Bus_21_10 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-10.csv", header = T)
-Bus_21_11 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-11.csv", header = T)
-Bus_21_12 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-12.csv", header = T)
-Bus_22_01 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-01.csv", header = T)
-Bus_22_02 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-02.csv", header = T)
-Bus_22_03 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-03.csv", header = T)
-Bus_22_04 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-04.csv", header = T)
-Bus_22_05 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-05.csv", header = T)
-Bus_22_06 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-06.csv", header = T)
-Bus_22_07 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-07.csv", header = T)
-Bus_22_08 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-08.csv", header = T)
-Bus_22_09 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-09.csv", header = T)
 ```
 
 ## Data Cleaning
-Select one week from each month
+
+Select one week from each month, combine the data sets, and clean the useless variables.
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 Q4_2021_date <- c("2021-10-11","2021-10-12","2021-10-13","2021-10-14","2021-10-15","2021-10-16","2021-10-17",
                   "2021-11-22","2021-11-23","2021-11-24","2021-11-25","2021-11-26","2021-11-27","2021-11-28",
@@ -103,7 +99,21 @@ rm(Q1_2022HRTimes,Q1_2022LRTimes,Q1_2022HRTimes_Selected,Q1_2022LRTimes_Selected
    Q2_2022HRTimes,Q2_2022LRTimes,Q2_2022HRTimes_Selected,Q2_2022LRTimes_Selected,
    Q3_2022HRTimes,Q3_2022LRTimes,Q3_2022HRTimes_Selected,Q3_2022LRTimes_Selected,
    Q4_2021HRTimes,Q4_2021LRTimes,Q4_2021HRTimes_Selected,Q4_2021LRTimes_Selected)
+```
 
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+Bus_21_10 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-10.csv", header = T)
+Bus_21_11 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-11.csv", header = T)
+Bus_21_12 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2021-12.csv", header = T)
+Bus_22_01 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-01.csv", header = T)
+Bus_22_02 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-02.csv", header = T)
+Bus_22_03 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-03.csv", header = T)
+Bus_22_04 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-04.csv", header = T)
+Bus_22_05 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-05.csv", header = T)
+Bus_22_06 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-06.csv", header = T)
+Bus_22_07 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-07.csv", header = T)
+Bus_22_08 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-08.csv", header = T)
+Bus_22_09 <- read.csv("MBTA-Bus-Arrival-Departure-Times_2022-09.csv", header = T)
 Bus_date <- c("2021-10-11","2021-10-12","2021-10-13","2021-10-14","2021-10-15","2021-10-16","2021-10-17",
               "2021-11-22","2021-11-23","2021-11-24","2021-11-25","2021-11-26","2021-11-27","2021-11-28",
               "2021-12-13","2021-12-14","2021-12-15","2021-12-16","2021-12-17","2021-12-18","2021-12-19",
@@ -147,6 +157,8 @@ plot1 <- LRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fil
     facet_wrap(~route_id)
 plot1
 ```
+Figure 1 shows how long will each routes in LR system take to travel between two steps. This can help us to see if any routes has very large distance between two stops on its
+path.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 2: Travel time between two stops of HR routes in seconds',fig.align='center'}
 plot2 <- HRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fill=route_id)) +
@@ -164,8 +176,8 @@ plot2 <- HRTimes_Selected %>% ggplot( aes(x=travel_time_sec, color=route_id, fil
     facet_wrap(~route_id)
 plot2
 ```
+Figure 2 shows how long will each routes in HR system take to travel between two steps. The feature is similar with the figure 1.
 
-Amount of different routes
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 3: Amount of different routes ranked',fig.align='center'}
 n_Green_B  <- length(which(RTimes_Selected$route_id == "Green-B"))
 n_Green_C  <- length(which(RTimes_Selected$route_id == "Green-C"))
@@ -189,8 +201,8 @@ plot3 <- route_number_df %>% arrange(val) %>%
 plot3
 rm(n_Green_B,n_Green_C,n_Green_D,n_Green_E,n_Mattapan,n_Orange,n_Blue,n_Red,route_number_df)
 ```
+Figure 3 shows the amount of different routes operated in selected days during passed year. This can show us how busy the route is, for some route that running frequently, it might means the estimated passenger flow volume is high. 
 
-Different train to the stop 70107
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 4: Average spending time from different stations to 70107',fig.align='center'}
 R_70107_df <- RTimes_Selected[RTimes_Selected$to_stop_id == "70107", c("route_id","from_stop_id","travel_time_sec")] %>%
               group_by(from_stop_id) %>%
@@ -209,8 +221,8 @@ plot4 <- R_70107_df %>% arrange(mean_time) %>%
 plot4
 rm(R_70107_df)
 ```
+Figure 4 shows the average spending time from different stations to stop 70107. This can shows that the distance between stop 70107 and the connected stations.
 
-Route date and time spent between stop 70117 and 70107
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 5: Average spending time between stop 70117 and 70107 on different date',fig.align='center'}
 R_70117_70107_df <- RTimes_Selected[RTimes_Selected$from_stop_id == "70117" & RTimes_Selected$to_stop_id == "70107",
                                     c("service_date","travel_time_sec")] %>%
@@ -228,8 +240,8 @@ plot5 <- R_70117_70107_df %>%
 plot5
 rm(R_70117_70107_df)
 ```
+Figure 5 shows the average spending time between stop 70107 and 70117 on different date. The feature is to find the time spent between stop 70117 and 70107 so we can see if there is large difference between different days. From the result we can see that 2021-10-11 and 2022-02-25 are the two days that the train took longest time to travel between this two stations. From the weather forecast(World Weather), 2021-10-11 is a regular day, and 2022-02-25 is the only day in that week that has shower sleet. So we can say 2022-02-25's delay is reasonable. However, for 2021-10-11, we still need to find what caused the problem.
 
-Delay of Route 57 at different date
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=10, fig.cap='Figure 6: Average delay time between different stops of route 57 at different date',fig.align='center'}
 Bus_Selected_57 <- Bus_Selected[Bus_Selected$route_id == "57",
                                 c("service_date","stop_id","actual","scheduled")]
@@ -251,7 +263,7 @@ plot6 <- Bus_57_df %>%
 plot6
 rm(Bus_57_df)
 ```
-
+Figure 6 shows the average delay time between two stops of route 57 at different date. Positive means there is a delay, and negative means the bus arrives early. As the figure shows, mostly, the bus arrives late, which fits my personal experiences, for some days, there is extremely late or early.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.cap='Figure 7: Start time, time enter the midpoint stop, and end time of route 57',fig.align='center'}
 Bus_Selected_57_Start <- Bus_Selected[Bus_Selected$route_id == "57"&
@@ -291,4 +303,13 @@ plot9 <- Bus_Selected_57_End %>%
          ylab("Density")
 grid.arrange(plot7, plot8, plot9, ncol = 3)
 ```
+Figure 7 shows the density of starting time, time the route 57 enter the midpoint, and the ending time. We can see the graphs are basically obeying the similar trending. Which means there is not lots of critical situation of the running of route 57.
+
+## Conclusion
+So from the data visualizations, we can see the figures have already explained some of the questions that confusing us. The extreme weather can be a affect influence to the delay of the transportation. However, sometimes when the weather is common, it still can be late. The reason can be the traffic jam, or car accidents for the bus route, and can be the railway conditions for the trains. Based on my personal experiences, I think the flow amount of passengers is also a big deal in causing the delay. If we can consider about all these influence factors during writing the code of the app, we can have a huge improvement on the final present result. 
+
+## Citation
+World Weather
+https://world-weather.info/forecast/usa/boston/october-2021/
+https://world-weather.info/forecast/usa/boston/february-2022/
 
